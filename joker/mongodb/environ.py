@@ -64,7 +64,10 @@ class GIMixinMongo:
     @cached_property
     def mongoi(self) -> MongoInterface:
         conf = getattr(self, 'conf', {})
-        return MongoInterface(conf.get('mongo_hosts'))
+        return MongoInterface(
+            conf.get('mongoi'),
+            conf.get('mongoi_defaults'),
+        )
 
     @cached_property
     def mongo(self) -> MongoClient:
