@@ -1,29 +1,27 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-import abc
-
 from gridfs import GridFS
+from joker.mongodb.wrappers import DatabaseWrapper, CollectionWrapper
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 from volkanic.compat import cached_property
 
-from joker.mongodb.wrappers import DatabaseWrapper, CollectionWrapper
-
 
 class MongoInterface:
-    def __init__(self, hosts: dict = None, defaults: list = None):
+    def __init__(self, hosts: dict = None, default: list = None):
+        self.default = default or ['lh', 'test']
+        assert len(default) == 2
         if hosts is None:
             hosts = {}
         hosts.setdefault('lh', {})
         self._clients = {}
         self.hosts = hosts
-        self.defaults = defaults or ['lh', 'test']
 
     def get_mongo(self, host: str = None) -> MongoClient:
         if host is None:
-            host = self.defaults[0]
+            host = self.default[0]
         try:
             return self._clients[host]
         except KeyError:
@@ -34,7 +32,7 @@ class MongoInterface:
 
     @property
     def db(self):
-        return self.get_db(*self.defaults)
+        return self.get_db(*self.default)
 
     def get_db(self, host: str, db_name: str) -> Database:
         mongo = self.get_mongo(host)
@@ -62,13 +60,17 @@ class MongoInterface:
 
 class GIMixinMongo:
     @cached_property
-    def mongoi(self) -> MongoInterface:
-        conf = getattr(self, 'conf', {})
-        return MongoInterface(
-            conf.get('mongoi'),
-            conf.get('mongoi_defaults'),
-        )
+    def db(self) -> Database:
+        return self.mongoi.db
 
     @cached_property
     def mongo(self) -> MongoClient:
         return self.mongoi.get_mongo()
+
+    @cached_property
+    def mongoi(self) -> MongoInterface:
+        conf = getattr(self, 'conf', {})
+        return MongoInterface(
+            conf.get('mongoi'),
+            conf.get('mongoi-default'),
+        )
