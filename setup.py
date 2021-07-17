@@ -47,9 +47,9 @@ config = {
     'version': _find_version(),
     'description': '' + _desc,
     'keywords': '',
-    'url': 'example.com',
-    'author': 'anonym',
-    'author_email': 'anonym@example.com',
+    'url': 'https://github.com/frozflame/joker-mongodb',
+    'author': 'frozflame',
+    'author_email': 'frozflame@outlook.com',
     'license': "GNU General Public License (GPL)",
     'packages': find_namespace_packages(include=['joker.*']),
     'zip_safe': False,
@@ -57,7 +57,6 @@ config = {
     'classifiers': [
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
@@ -69,8 +68,8 @@ config = {
     ],
     # ensure copy static file to runtime directory
     'include_package_data': True,
-    # 'long_description': read('README.md'),
-    # 'long_description_content_type': "text/markdown",
+    'long_description': read('README.md'),
+    'long_description_content_type': "text/markdown",
 }
 
 if _nsp:

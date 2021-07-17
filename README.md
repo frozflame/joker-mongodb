@@ -7,7 +7,7 @@ Example:
 
 ```python
 import volkanic
-from joker.mongodb.environ import GIMixinMongo
+from joker.mongodb import GIMixinMongo
 
 
 class GlobalInterface(volkanic.GlobalInterface, GIMixinMongo):
