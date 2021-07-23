@@ -11,12 +11,13 @@ from volkanic.compat import cached_property
 
 class MongoInterface:
     def __init__(self, hosts: dict = None, default: list = None):
-        self.default = default or ['lh', 'test']
+        default = default or ['lh', 'test']
         assert len(default) == 2
         if hosts is None:
             hosts = {}
         hosts.setdefault('lh', {})
         self._clients = {}
+        self.default = default
         self.hosts = hosts
 
     def get_mongo(self, host: str = None) -> MongoClient:
