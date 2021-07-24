@@ -1,6 +1,8 @@
 joker-mongodb
 =============
 
+Access mongodb with handy utilities and fun.
+
 Example:
 
 `GlobalInterface` is defined in `example/environ.py` as:

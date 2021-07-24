@@ -14,7 +14,6 @@ from setuptools import find_namespace_packages
 
 _nsp = 'joker'
 _pkg = 'mongodb'
-_desc = ''
 _names = [_nsp, _pkg]
 _names = [s for s in _names if s]
 
@@ -45,7 +44,7 @@ def _find_version():
 config = {
     'name': 'joker-mongodb',
     'version': _find_version(),
-    'description': '' + _desc,
+    'description': 'access mongodb with handy utilities and fun',
     'keywords': '',
     'url': 'https://github.com/frozflame/joker-mongodb',
     'author': 'frozflame',
