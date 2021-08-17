@@ -9,10 +9,10 @@ Example:
 
 ```python
 import volkanic
-from joker.mongodb import GIMixinMongo
+from joker.mongodb import GIMixinMongoi
 
 
-class GlobalInterface(volkanic.GlobalInterface, GIMixinMongo):
+class GlobalInterface(volkanic.GlobalInterface, GIMixinMongoi):
     package_name = 'example'
 ```
 

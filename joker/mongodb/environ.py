@@ -12,6 +12,8 @@ from joker.mongodb.wrappers import DatabaseWrapper, CollectionWrapper
 
 
 class MongoClientExtended(MongoClient):
+    """An extended client-side representation of a mongodb cluster."""
+    
     get_db = MongoClient.get_database
 
     def __repr__(self):
@@ -45,6 +47,8 @@ class MongoClientExtended(MongoClient):
 
 
 class MongoInterface:
+    """A interface for multiple mongodb clusters."""
+
     def __init__(self, hosts: dict = None, default: list = None):
         default = default or ['lh', 'test']
         assert len(default) == 2
