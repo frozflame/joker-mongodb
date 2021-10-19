@@ -1,7 +1,8 @@
-__version__ = '0.0.6'
+__version__ = '0.1.0'
 
-from joker.mongodb.environ import (
-    GIMixinMongo, GIMixinMongoi, MongoInterface, MongoClientExtended
+from joker.mongodb.interfaces import (
+    MongoClientExtended, MongoInterface,
+    MongoInterfaceExtended,
 )
 
 if __name__ == '__main__':

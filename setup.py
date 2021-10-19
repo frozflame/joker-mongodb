@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# from setup.py.jinja2
-
 import os
 import re
 
