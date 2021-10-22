@@ -10,22 +10,12 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.cursor import Cursor
 from pymongo.database import Database
+from joker.mongodb.tools import kvstore
 
 from joker.mongodb import utils
 
 
-class DatabaseExplorer:
-    def __init__(self, db: Database):
-        self.db = db
-
-    def inspect_storage_sizes(self):
-        return utils.inspect_mongo_storage_sizes(self.db)
-
-    def print_storage_sizes(self):
-        return utils.print_mongo_storage_sizes(self.db)
-
-
-class CollectionExplorer:
+class CollectionInterface:
     def __init__(self, coll: Collection, filtr=None, projection=None):
         self.coll = coll
         self.filtr = filtr or {}
@@ -33,6 +23,12 @@ class CollectionExplorer:
 
     def exist(self, filtr: Union[ObjectId, dict]):
         return self.coll.find_one(filtr, projection=[])
+
+    def kv_load(self, key: str):
+        return kvstore.kv_load(self.coll, key)
+
+    def kv_save(self, key: str, val):
+        return kvstore.kv_save(self.coll, key, val)
 
     def find_recent_by_count(self, count=50) -> Cursor:
         cursor = self.coll.find(self.filtr, projection=self.projection)
@@ -81,10 +77,19 @@ class CollectionExplorer:
         return uniq
 
 
+class DatabaseInterface:
+    def __init__(self, db: Database):
+        self.db = db
+
+    def inspect_storage_sizes(self):
+        return utils.inspect_mongo_storage_sizes(self.db)
+
+    def print_storage_sizes(self):
+        return utils.print_mongo_storage_sizes(self.db)
+
+
 class MongoClientExtended(MongoClient):
     """An extended client-side representation of a mongodb cluster."""
-
-    get_db = MongoClient.get_database
 
     def __repr__(self):
         cn = self.__class__.__name__
@@ -96,16 +101,18 @@ class MongoClientExtended(MongoClient):
     def print_storage_sizes(self):
         return utils.print_mongo_storage_sizes(self)
 
-    def get_dbx(self, db_name: str) -> DatabaseExplorer:
-        return DatabaseExplorer(self.get_database(db_name))
+    get_db = MongoClient.get_database
+
+    def get_dbi(self, db_name: str) -> DatabaseInterface:
+        return DatabaseInterface(self.get_database(db_name))
 
     def get_coll(self, db_name: str, coll_name: str) -> Collection:
         db = self.get_database(db_name)
         return db.get_collection(coll_name)
 
-    def get_collx(self, db_name: str, coll_name: str) -> CollectionExplorer:
+    def get_colli(self, db_name: str, coll_name: str) -> CollectionInterface:
         coll = self.get_coll(db_name, coll_name)
-        return CollectionExplorer(coll)
+        return CollectionInterface(coll)
 
     def get_gridfs(self, db_name: str, coll_name: str = 'fs') \
             -> GridFS:
@@ -177,19 +184,17 @@ class MongoInterface:
 class MongoInterfaceExtended(MongoInterface):
     mongoclient_cls = MongoClientExtended
 
-    def get_dbx(self, host: str, db_name: str) -> DatabaseExplorer:
+    @property
+    def dbi(self) -> DatabaseInterface:
+        return self.get_dbi(self.default_host, self.default_db_name)
+
+    def get_dbi(self, host: str, db_name: str) -> DatabaseInterface:
         mongo = self.get_mongo(host)
         db_name = self.aliases.get(db_name, db_name)
         return mongo.get_dbx(db_name)
 
-    @property
-    def dbx(self) -> DatabaseExplorer:
-        return self.get_dbx(self.default_host, self.default_db_name)
-
-    def get_collx(self, host: str, db_name: str, coll_name: str) \
-            -> CollectionExplorer:
+    def get_colli(self, host: str, db_name: str, coll_name: str) \
+            -> CollectionInterface:
         mongo = self.get_mongo(host)
         db_name = self.aliases.get(db_name, db_name)
         return mongo.get_collx(db_name, coll_name)
-
-
