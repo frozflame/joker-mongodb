@@ -10,28 +10,28 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.cursor import Cursor
 from pymongo.database import Database
-from joker.mongodb.tools import kvstore
 
 from joker.mongodb import utils
+from joker.mongodb.tools import kvstore
 
 
 class CollectionInterface:
     def __init__(self, coll: Collection, filtr=None, projection=None):
-        self.coll = coll
+        self._coll = coll
         self.filtr = filtr or {}
         self.projection = projection
 
     def exist(self, filtr: Union[ObjectId, dict]):
-        return self.coll.find_one(filtr, projection=[])
+        return self._coll.find_one(filtr, projection=[])
 
     def kv_load(self, key: str):
-        return kvstore.kv_load(self.coll, key)
+        return kvstore.kv_load(self._coll, key)
 
     def kv_save(self, key: str, val):
-        return kvstore.kv_save(self.coll, key, val)
+        return kvstore.kv_save(self._coll, key, val)
 
     def find_recent_by_count(self, count=50) -> Cursor:
-        cursor = self.coll.find(self.filtr, projection=self.projection)
+        cursor = self._coll.find(self.filtr, projection=self.projection)
         return cursor.sort([('_id', -1)]).limit(count)
 
     def find_most_recent_one(self) -> dict:
@@ -41,7 +41,7 @@ class CollectionInterface:
 
     def _insert(self, records):
         if records:
-            self.coll.insert_many(records, ordered=False)
+            self._coll.insert_many(records, ordered=False)
 
     @staticmethod
     def _check_for_uniqueness(records, uk):
@@ -54,7 +54,7 @@ class CollectionInterface:
         fusion_record = {}
         contiguous_stale_count = -1
         for skip in range(1000):
-            record = self.coll.find_one(sort=[('$natural', -1)], skip=skip)
+            record = self._coll.find_one(sort=[('$natural', -1)], skip=skip)
             if not record:
                 continue
             contiguous_stale_count += 1
@@ -68,7 +68,7 @@ class CollectionInterface:
 
     def query_uniq_values(self, fields: list, limit=1000):
         latest = [('_id', -1)]
-        records = self.coll.find(sort=latest, projection=fields, limit=limit)
+        records = self._coll.find(sort=latest, projection=fields, limit=limit)
         uniq = defaultdict(set)
         for key in fields:
             for rec in records:
@@ -79,13 +79,13 @@ class CollectionInterface:
 
 class DatabaseInterface:
     def __init__(self, db: Database):
-        self.db = db
+        self._db = db
 
     def inspect_storage_sizes(self):
-        return utils.inspect_mongo_storage_sizes(self.db)
+        return utils.inspect_mongo_storage_sizes(self._db)
 
     def print_storage_sizes(self):
-        return utils.print_mongo_storage_sizes(self.db)
+        return utils.print_mongo_storage_sizes(self._db)
 
 
 class MongoClientExtended(MongoClient):
@@ -101,7 +101,8 @@ class MongoClientExtended(MongoClient):
     def print_storage_sizes(self):
         return utils.print_mongo_storage_sizes(self)
 
-    get_db = MongoClient.get_database
+    def get_db(self, db_name: str) -> Database:
+        return self.get_database(db_name)
 
     def get_dbi(self, db_name: str) -> DatabaseInterface:
         return DatabaseInterface(self.get_database(db_name))
@@ -110,7 +111,7 @@ class MongoClientExtended(MongoClient):
         db = self.get_database(db_name)
         return db.get_collection(coll_name)
 
-    def get_colli(self, db_name: str, coll_name: str) -> CollectionInterface:
+    def get_ci(self, db_name: str, coll_name: str) -> CollectionInterface:
         coll = self.get_coll(db_name, coll_name)
         return CollectionInterface(coll)
 
@@ -146,7 +147,7 @@ class MongoInterface:
         }
         return cls(options, **params)
 
-    def get_mongo(self, host: str = None) -> MongoClient:
+    def get_mongo(self, host: str = None) -> 'mongoclient_cls':
         if host is None:
             host = self.default_host
         try:
@@ -162,6 +163,16 @@ class MongoInterface:
     @property
     def db(self) -> Database:
         return self.get_db(self.default_host, self.default_db_name)
+
+    def __call__(self, *names) -> Collection:
+        n = len(names)
+        if n in [1, 3]:
+            c = self.__class__.__name__
+            msg = '{}.__call__ takes 1 or 3 arguments, got {}'.format(c, n)
+            raise ValueError(msg)
+        if n == 1:
+            names = self.default_host, self.default_db_name, names[0]
+        return self.get_coll(*names)
 
     def get_db(self, host: str, db_name: str) -> Database:
         mongo = self.get_mongo(host)
@@ -189,12 +200,22 @@ class MongoInterfaceExtended(MongoInterface):
         return self.get_dbi(self.default_host, self.default_db_name)
 
     def get_dbi(self, host: str, db_name: str) -> DatabaseInterface:
-        mongo = self.get_mongo(host)
+        mongo = self.get_mongo(host)  # type: MongoClientExtended
         db_name = self.aliases.get(db_name, db_name)
-        return mongo.get_dbx(db_name)
+        return mongo.get_dbi(db_name)
 
-    def get_colli(self, host: str, db_name: str, coll_name: str) \
-            -> CollectionInterface:
-        mongo = self.get_mongo(host)
+    def get_ci(self, *names) -> CollectionInterface:
+        n = len(names)
+        if n == 1:
+            host = self.default_host
+            db_name = self.default_db_name
+            coll_name = names[0]
+        elif n == 3:
+            host, db_name, coll_name = names
+        else:
+            c = self.__class__.__name__
+            msg = '{}.get_ci takes 1 or 3 arguments, got {}'.format(c, n)
+            raise ValueError(msg)
+        mongo = self.get_mongo(host)  # type: MongoClientExtended
         db_name = self.aliases.get(db_name, db_name)
-        return mongo.get_collx(db_name, coll_name)
+        return mongo.get_ci(db_name, coll_name)
