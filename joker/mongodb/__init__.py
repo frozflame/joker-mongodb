@@ -1,8 +1,7 @@
 __version__ = '0.1.0'
 
 from joker.mongodb.interfaces import (
-    MongoClientExtended, MongoInterface,
-    MongoInterfaceExtended,
+    MongoInterface, MongoInterfaceExtended,
 )
 
 if __name__ == '__main__':

@@ -77,57 +77,8 @@ class CollectionInterface:
         return uniq
 
 
-class DatabaseInterface:
-    def __init__(self, db: Database):
-        self._db = db
-
-    def inspect_storage_sizes(self):
-        return utils.inspect_mongo_storage_sizes(self._db)
-
-    def print_storage_sizes(self):
-        return utils.print_mongo_storage_sizes(self._db)
-
-
-class MongoClientExtended(MongoClient):
-    """An extended client-side representation of a mongodb cluster."""
-
-    def __repr__(self):
-        cn = self.__class__.__name__
-        return "{}({})".format(cn, self._repr_helper())
-
-    def inspect_storage_sizes(self):
-        return utils.inspect_mongo_storage_sizes(self)
-
-    def print_storage_sizes(self):
-        return utils.print_mongo_storage_sizes(self)
-
-    def get_db(self, db_name: str) -> Database:
-        return self.get_database(db_name)
-
-    def get_dbi(self, db_name: str) -> DatabaseInterface:
-        return DatabaseInterface(self.get_database(db_name))
-
-    def get_coll(self, db_name: str, coll_name: str) -> Collection:
-        db = self.get_database(db_name)
-        return db.get_collection(coll_name)
-
-    def get_ci(self, db_name: str, coll_name: str) -> CollectionInterface:
-        coll = self.get_coll(db_name, coll_name)
-        return CollectionInterface(coll)
-
-    def get_gridfs(self, db_name: str, coll_name: str = 'fs') \
-            -> GridFS:
-        # avoid names like "images.files.files"
-        if coll_name.endswith('.files') or coll_name.endswith('.chunks'):
-            coll_name = coll_name.rsplit('.', 1)[0]
-        db = self.get_database(db_name)
-        return GridFS(db, collection=coll_name)
-
-
 class MongoInterface:
     """A interface for multiple mongodb clusters."""
-
-    mongoclient_cls = MongoClient
 
     def __init__(self, hosts: dict, default: str = None, aliases: dict = None):
         if default is None:
@@ -147,7 +98,7 @@ class MongoInterface:
         }
         return cls(options, **params)
 
-    def get_mongo(self, host: str = None) -> 'mongoclient_cls':
+    def get_mongo(self, host: str = None) -> MongoClient:
         if host is None:
             host = self.default_host
         try:
@@ -158,20 +109,25 @@ class MongoInterface:
         params = self.hosts.get(host, host)
         if isinstance(params, str):
             params = {'host': params}
-        return self._clients.setdefault(host, self.mongoclient_cls(**params))
+        return self._clients.setdefault(host, MongoClient(**params))
 
     @property
     def db(self) -> Database:
         return self.get_db(self.default_host, self.default_db_name)
 
-    def __call__(self, *names) -> Collection:
+    def _check_coll_triple(self, names: tuple) -> tuple:
         n = len(names)
-        if n in [1, 3]:
-            c = self.__class__.__name__
-            msg = '{}.__call__ takes 1 or 3 arguments, got {}'.format(c, n)
-            raise ValueError(msg)
         if n == 1:
-            names = self.default_host, self.default_db_name, names[0]
+            return self.default_host, self.default_db_name, names[0]
+        elif n == 3:
+            return names
+        else:
+            c = self.__class__.__name__
+            msg = 'requires 1 or 3 arguments, got {}'.format(c, n)
+            raise ValueError(msg)
+
+    def __call__(self, *names) -> Collection:
+        names = self._check_coll_triple(names)
         return self.get_coll(*names)
 
     def get_db(self, host: str, db_name: str) -> Database:
@@ -193,29 +149,19 @@ class MongoInterface:
 
 
 class MongoInterfaceExtended(MongoInterface):
-    mongoclient_cls = MongoClientExtended
+    def _get_target(self, host: str, db_name: str = None):
+        if db_name is None:
+            return self.get_mongo(host)
+        return self.get_db(host, db_name)
 
-    @property
-    def dbi(self) -> DatabaseInterface:
-        return self.get_dbi(self.default_host, self.default_db_name)
+    def inspect_storage_sizes(self, host: str, db_name: str = None):
+        target = self._get_target(host, db_name)
+        return utils.inspect_mongo_storage_sizes(target)
 
-    def get_dbi(self, host: str, db_name: str) -> DatabaseInterface:
-        mongo = self.get_mongo(host)  # type: MongoClientExtended
-        db_name = self.aliases.get(db_name, db_name)
-        return mongo.get_dbi(db_name)
+    def print_storage_sizes(self, host: str, db_name: str = None):
+        target = self._get_target(host, db_name)
+        return utils.print_mongo_storage_sizes(target)
 
-    def get_ci(self, *names) -> CollectionInterface:
-        n = len(names)
-        if n == 1:
-            host = self.default_host
-            db_name = self.default_db_name
-            coll_name = names[0]
-        elif n == 3:
-            host, db_name, coll_name = names
-        else:
-            c = self.__class__.__name__
-            msg = '{}.get_ci takes 1 or 3 arguments, got {}'.format(c, n)
-            raise ValueError(msg)
-        mongo = self.get_mongo(host)  # type: MongoClientExtended
-        db_name = self.aliases.get(db_name, db_name)
-        return mongo.get_ci(db_name, coll_name)
+    def get_ci(self, *names, **kwargs) -> CollectionInterface:
+        coll = self.__call__(*names)
+        return CollectionInterface(coll, **kwargs)
