@@ -19,7 +19,6 @@ def _show_call_stack(func):
     return ret_func
 
 
-
 def patch_mongo_for_debug(wrapper_func=None):
     if wrapper_func is None:
         wrapper_func = _show_call_stack

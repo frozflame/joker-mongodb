@@ -133,19 +133,17 @@ class MongoInterface:
     def get_db(self, host: str, db_name: str) -> Database:
         mongo = self.get_mongo(host)
         db_name = self.aliases.get(db_name, db_name)
-        return mongo.get_db(db_name)
+        return mongo.get_database(db_name)
 
     def get_coll(self, host: str, db_name: str, coll_name: str) \
             -> Collection:
-        mongo = self.get_mongo(host)
-        db_name = self.aliases.get(db_name, db_name)
-        return mongo.get_coll(db_name, coll_name)
+        db = self.get_db(host, db_name)
+        return db.get_collection(coll_name)
 
     def get_gridfs(self, host: str, db_name: str, coll_name: str = 'fs') \
             -> GridFS:
-        mongo = self.get_mongo(host)
-        db_name = self.aliases.get(db_name, db_name)
-        return mongo.get_gridfs(db_name, coll_name)
+        db = self.get_db(host, db_name)
+        return GridFS(db, collection=coll_name)
 
 
 class MongoInterfaceExtended(MongoInterface):
