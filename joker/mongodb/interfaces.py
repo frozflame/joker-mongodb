@@ -170,10 +170,6 @@ class MongoInterfaceExtended(MongoInterface):
     @staticmethod
     def _infer_coll_triple(path: str):
         """
-        Args:
-            path: e.g. "local."
-        Returns:
-
         >>> p = "somedir/local.retail.customers.6789.json"
         >>> MongoInterfaceExtended._infer_coll_triple(p)
         ['local', 'retail', 'customers']
