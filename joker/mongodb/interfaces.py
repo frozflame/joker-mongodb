@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
+import os.path
 from collections import defaultdict
 from typing import Union
 
-from bson import ObjectId
+import pymongo.errors
+from bson import ObjectId, json_util
 from gridfs import GridFS
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.cursor import Cursor
 from pymongo.database import Database
+from volkanic.utils import printerr
 
 from joker.mongodb import utils
 from joker.mongodb.tools import kvstore
@@ -163,3 +166,37 @@ class MongoInterfaceExtended(MongoInterface):
     def get_ci(self, *names, **kwargs) -> CollectionInterface:
         coll = self.__call__(*names)
         return CollectionInterface(coll, **kwargs)
+
+    @staticmethod
+    def _infer_coll_triple(path: str):
+        """
+        Args:
+            path: e.g. "local."
+        Returns:
+
+        >>> p = "somedir/local.retail.customers.6789.json"
+        >>> MongoInterfaceExtended._infer_coll_triple(p)
+        ['local', 'retail', 'customers']
+        """
+        filename = os.path.split(path)[1]
+        coll_fullname = filename.rsplit('.', 2)[0]
+        return coll_fullname.split('.', 2)
+
+    def restore_a_file(self, lines, inner_path: str, empty_coll_only=True):
+        host, db_name, coll_name = self._infer_coll_triple(inner_path)
+        if coll_name == 'system.indexes':
+            return
+        coll = self.get_coll(host, db_name, coll_name)
+        if empty_coll_only and coll.find_one(projection=[]):
+            printerr(inner_path, 'skipped')
+            return
+        for ix, line in enumerate(lines):
+            doc = json_util.loads(line)
+            id_ = doc.get('_id', '')
+            printerr(inner_path, ix, id_, '...', end=' ')
+            try:
+                coll.insert_one(doc)
+            except pymongo.errors.DuplicateKeyError:
+                printerr('DuplicateKeyError')
+            else:
+                printerr('completed')
