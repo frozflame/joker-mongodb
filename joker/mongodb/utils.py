@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import logging
+import os.path
 from typing import Union
 
 from joker.cast.numeric import human_filesize
@@ -33,6 +34,17 @@ def print_mongo_storage_sizes(target: Union[MongoClient, Database]):
         rows.append([round(num), unit, k])
     for row in tabular_format(rows):
         print(*row)
+
+
+def infer_coll_triple_from_filename(path: str):
+    """
+    >>> p = "somedir/local.retail.customers.6789.json"
+    >>> infer_coll_triple_from_filename(p)
+    ['local', 'retail', 'customers']
+    """
+    filename = os.path.split(path)[1]
+    coll_fullname = filename.rsplit('.', 2)[0]
+    return coll_fullname.split('.', 2)
 
 
 class MongoCommandLogger(CommandListener):

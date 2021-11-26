@@ -167,19 +167,10 @@ class MongoInterfaceExtended(MongoInterface):
         coll = self.__call__(*names)
         return CollectionInterface(coll, **kwargs)
 
-    @staticmethod
-    def _infer_coll_triple(path: str):
-        """
-        >>> p = "somedir/local.retail.customers.6789.json"
-        >>> MongoInterfaceExtended._infer_coll_triple(p)
-        ['local', 'retail', 'customers']
-        """
-        filename = os.path.split(path)[1]
-        coll_fullname = filename.rsplit('.', 2)[0]
-        return coll_fullname.split('.', 2)
-
+    # TODO: support BSON
     def restore_a_file(self, lines, inner_path: str, empty_coll_only=True):
-        host, db_name, coll_name = self._infer_coll_triple(inner_path)
+        host, db_name, coll_name = \
+            utils.infer_coll_triple_from_filename(inner_path)
         if coll_name == 'system.indexes':
             return
         coll = self.get_coll(host, db_name, coll_name)
