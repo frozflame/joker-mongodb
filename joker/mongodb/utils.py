@@ -5,6 +5,8 @@ import logging
 import os.path
 from typing import Union
 
+import bson.json_util
+import volkanic.utils
 from joker.cast.numeric import human_filesize
 from joker.textmanip.tabular import tabular_format
 from pymongo import MongoClient
@@ -34,6 +36,16 @@ def print_mongo_storage_sizes(target: Union[MongoClient, Database]):
         rows.append([round(num), unit, k])
     for row in tabular_format(rows):
         print(*row)
+
+
+def indented_json_dumps(obj, **kwargs):
+    kwargs.setdefault('dumps', bson.json_util)
+    return volkanic.utils.indented_json_dumps(obj, **kwargs)
+
+
+def indented_json_print(obj, **kwargs):
+    kwargs.setdefault('dumps', indented_json_dumps)
+    return volkanic.utils.indented_json_print(obj, **kwargs)
 
 
 def infer_coll_triple_from_filename(path: str):
