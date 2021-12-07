@@ -39,7 +39,7 @@ def print_mongo_storage_sizes(target: Union[MongoClient, Database]):
 
 
 def indented_json_dumps(obj, **kwargs):
-    kwargs.setdefault('dumps', bson.json_util)
+    kwargs.setdefault('dumps', bson.json_util.dumps)
     return volkanic.utils.indented_json_dumps(obj, **kwargs)
 
 
