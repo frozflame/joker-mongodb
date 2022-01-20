@@ -17,6 +17,11 @@ from pymongo.monitoring import (
 )
 
 
+def is_in_replset(mongo: MongoClient) -> bool:
+    db = mongo.get_database('admin')
+    return 'replication' in db.command('getCmdLineOpts')['parsed']
+
+
 def inspect_mongo_storage_sizes(target: Union[MongoClient, Database]):
     if isinstance(target, MongoClient):
         return {r['name']: r['sizeOnDisk'] for r in target.list_databases()}
