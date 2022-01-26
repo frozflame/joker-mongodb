@@ -64,6 +64,12 @@ def infer_coll_triple_from_filename(path: str):
     return coll_fullname.split('.', 2)
 
 
+def infer_params(mongo: MongoClient):
+    params = dict(zip(['host', 'port'], mongo.address))
+    params.update(mongo._MongoClient__options._options)  # noqa
+    return params
+
+
 class MongoCommandLogger(CommandListener):
     _registered = False
     _logger = logging.getLogger('_mongodb')

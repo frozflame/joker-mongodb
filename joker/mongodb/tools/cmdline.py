@@ -3,6 +3,30 @@
 
 import argparse
 
+from volkanic.cmdline import CommandOptionDict
+
+
+def _add_hyphens(parts: list) -> list:
+    if not parts:
+        return parts
+    key = str(parts[0])
+    if not key.startswith('-'):
+        prefix = '--' if len(key) > 1 else '-'
+        key = prefix + key
+    return [key] + parts[1:]
+
+
+class CommandOptionDictMongoish(CommandOptionDict):
+    @classmethod
+    def _explode(cls, key, val):
+        parts = super()._explode(key, val)
+        parts = _add_hyphens(parts)
+        if len(parts) != 2:
+            return parts
+        key, val = parts
+        if key.startswith('--'):
+            return [f'{key}={val}']
+
 
 class ArgumentParserMongoish(argparse.ArgumentParser):
     def add_argument_mongoi_host(self):
