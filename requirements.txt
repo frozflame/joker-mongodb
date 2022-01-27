@@ -1,4 +1,4 @@
-volkanic>=0.3.6
+volkanic~=0.4.1
 pymongo>=3.11.0
 joker-cast>=0.5.0
 joker-textmanip>=0.3.1
