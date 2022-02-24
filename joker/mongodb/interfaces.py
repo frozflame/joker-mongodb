@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-import os.path
 from collections import defaultdict
 from typing import Union
 
@@ -83,12 +82,11 @@ class CollectionInterface:
 class MongoInterface:
     """A interface for multiple mongodb clusters."""
 
-    def __init__(self, hosts: dict, default: str = None, aliases: dict = None):
-        if default is None:
-            self.default_host = 'localhost'
-            self.default_db_name = 'test1'
-        else:
-            self.default_host, self.default_db_name = default.split('.')
+    def __init__(
+            self, hosts: dict,
+            default: str = 'localhost.default',
+            aliases: dict = None):
+        self.default_host, self.default_db_name = default.split('.')
         self.hosts = hosts
         self.aliases = aliases or {}
         self._clients = {}
