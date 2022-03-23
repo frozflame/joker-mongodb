@@ -143,8 +143,8 @@ class MongoInterface:
 
     def get_gridfs(self, host: str, db_name: str, coll_name: str = 'fs') \
             -> GridFS:
-        if coll_name.endswith('.files') or coll_name.endswith('.chunks'):
-            coll_name = coll_name.rsplit('.', maxsplit=1)[0]
+        assert not coll_name.endswith('.files')
+        assert not coll_name.endswith('.chunks')
         db = self.get_db(host, db_name)
         return GridFS(db, collection=coll_name)
 
