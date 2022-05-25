@@ -31,22 +31,6 @@ class GlobalInterface(volkanic.GlobalInterface):
     @cached_property
     def mongoi(self) -> MongoInterface:
         return MongoInterface.from_config(self.conf['mongoi'])
-
-```
-
-Configuration file `config.json5`:
-
-```json5
-{
-    "mongoi": {
-        "local": {},
-        "remote": {
-            "host": "192.168.22.122",
-            // default mongo port is 27017
-            "port": 27018
-        }
-    }
-}
 ```
 
 If a configuration file is found at one of the follow locations:
@@ -62,7 +46,8 @@ Usage in code `example/application.py`:
 
 ```python
 from bson import ObjectId
-from example.environ import GlobalInterface  # noqa
+# noinspection PyUnresolvedReferences,PyPackageRequirements
+from example.environ import GlobalInterface
 
 gi = GlobalInterface()
 
@@ -75,3 +60,15 @@ def get_product(product_oid):
 if __name__ == '__main__':
     print(get_product('60f231605e0a4ea3c6c31c13'))
 ```
+
+recent changes
+--------------
+
+version 0.1.4
+
+* add `MongoDocumentSchemator` and `MongoFieldSchemator`
+
+version 0.1.3
+
+* add `TransactionHelper`
+
