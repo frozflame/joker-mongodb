@@ -61,7 +61,7 @@ if __name__ == '__main__':
     print(get_product('60f231605e0a4ea3c6c31c13'))
 ```
 
-recent changes
+Recent changes
 --------------
 
 version 0.1.4

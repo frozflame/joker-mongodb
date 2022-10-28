@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
+import logging
 from pymongo.collection import Collection
+
+_logger = logging.getLogger(__name__)
 
 
 def _namemap_to_project(namemap: dict):
@@ -35,6 +38,7 @@ def find_one_with_renaming(
         {'$limit': 1},
         {'$project': _namemap_to_project(namemap)},
     ]
+    _logger.debug('pipelines: %s', pipelines)
     docs = list(coll.aggregate(pipelines))
     if docs:
         return docs[0]
