@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 # coding: utf-8
+from __future__ import annotations
 
 import logging
+import threading
 import time
 from collections import UserDict
+from collections import defaultdict
+from typing import Callable
 
 import pymongo
 from bson import Timestamp, json_util, ObjectId
 from pymongo import MongoClient
+from pymongo.database import Database
 
 _logger = logging.getLogger(__name__)
 
@@ -138,3 +143,42 @@ class OplogTailer(object):
                 continue
             self.ts = doc.get('ts')
             return self.record_cls(doc)
+
+
+class ChangeStreamRegistry:
+    def __init__(self, db: Database):
+        self.db = db
+        self.handlers = defaultdict(list)
+
+    @staticmethod
+    def _log_handling(coll_name: str, handler: Callable, record: dict):
+        try:
+            id_ = record['documentKey']['_id']
+        except KeyError:
+            id_ = None
+        _logger.info(
+            'applying %s() to change event of collection %r, %s',
+            getattr(handler, '__name__', None) or str(handler),
+            coll_name, id_
+        )
+
+    def watch(self, coll_name: str):
+        coll = self.db[coll_name]
+        cursor = coll.watch()
+        for record in cursor:
+            for handler in self.handlers.get(coll_name):
+                self._log_handling(coll_name, handler, record)
+                handler(record)
+
+    def register(self, coll_name: str, handler: Callable):
+        self.handlers[coll_name].append(handler)
+
+    def execute(self):
+        threads = []
+        for coll_name, handlers in self.handlers.items():
+            args = tuple([coll_name])
+            thr = threading.Thread(target=self.watch, args=args)
+            thr.start()
+            threads.append(thr)
+        for thr in threads:
+            thr.join()
