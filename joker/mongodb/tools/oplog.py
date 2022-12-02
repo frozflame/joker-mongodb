@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+import traceback
 from collections import UserDict
 from collections import defaultdict
 from typing import Callable
@@ -151,9 +152,9 @@ class ChangeStreamRegistry:
         self.handlers = defaultdict(list)
 
     @staticmethod
-    def _log_handling(coll_name: str, handler: Callable, record: dict):
+    def _apply(coll_name: str, handler: Callable, event: dict):
         try:
-            id_ = record['documentKey']['_id']
+            id_ = event['documentKey']['_id']
         except KeyError:
             id_ = None
         _logger.info(
@@ -161,14 +162,18 @@ class ChangeStreamRegistry:
             getattr(handler, '__name__', None) or str(handler),
             coll_name, id_
         )
+        # noinspection PyBroadException
+        try:
+            handler(event)
+        except Exception:
+            traceback.print_exc()
 
     def watch(self, coll_name: str):
         coll = self.db[coll_name]
         cursor = coll.watch()
         for record in cursor:
             for handler in self.handlers.get(coll_name):
-                self._log_handling(coll_name, handler, record)
-                handler(record)
+                self._apply(coll_name, handler, record)
 
     def register(self, coll_name: str, handler: Callable):
         self.handlers[coll_name].append(handler)
