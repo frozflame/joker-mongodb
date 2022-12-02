@@ -152,7 +152,7 @@ class ChangeStreamRegistry:
         self.handlers = defaultdict(list)
 
     @staticmethod
-    def _apply(coll_name: str, handler: Callable, event: dict):
+    def apply(handler: Callable, coll_name: str, event: dict):
         try:
             id_ = event['documentKey']['_id']
         except KeyError:
@@ -171,9 +171,9 @@ class ChangeStreamRegistry:
     def watch(self, coll_name: str):
         coll = self.db[coll_name]
         cursor = coll.watch()
-        for record in cursor:
+        for event in cursor:
             for handler in self.handlers.get(coll_name):
-                self._apply(coll_name, handler, record)
+                self.apply(handler, coll_name, event)
 
     def register(self, coll_name: str, handler: Callable):
         self.handlers[coll_name].append(handler)
