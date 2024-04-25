@@ -1,4 +1,4 @@
-__version__ = '0.1.6a'
+__version__ = '0.2.0'
 
 from joker.mongodb.interfaces import (
     MongoInterface, MongoInterfaceExtended,

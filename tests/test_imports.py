@@ -5,7 +5,7 @@ import importlib
 
 from volkanic.introspect import find_all_plain_modules
 
-import joker.environ
+import joker.meta
 
 dotpath_prefixes = [
     'joker.mongodb.',
@@ -13,7 +13,7 @@ dotpath_prefixes = [
 ]
 
 
-class _GI(joker.environ.GlobalInterface):
+class _GI(joker.meta.JokerInterface):
     package_name = 'joker.mongodb'
 
 
