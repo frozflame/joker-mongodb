@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
+from __future__ import annotations
 
 import logging
 import os.path
@@ -12,23 +13,25 @@ from joker.textmanip.tabular import tabular_format
 from pymongo import MongoClient
 from pymongo.database import Database
 from pymongo.monitoring import (
-    CommandListener, CommandStartedEvent,
-    CommandFailedEvent, CommandSucceededEvent,
+    CommandListener,
+    CommandStartedEvent,
+    CommandFailedEvent,
+    CommandSucceededEvent,
 )
 
 
 def is_in_replset(mongo: MongoClient) -> bool:
-    db = mongo.get_database('admin')
-    return 'replication' in db.command('getCmdLineOpts')['parsed']
+    db = mongo.get_database("admin")
+    return "replication" in db.command("getCmdLineOpts")["parsed"]
 
 
 def inspect_mongo_storage_sizes(target: Union[MongoClient, Database]):
     if isinstance(target, MongoClient):
-        return {r['name']: r['sizeOnDisk'] for r in target.list_databases()}
+        return {r["name"]: r["sizeOnDisk"] for r in target.list_databases()}
     size_of_collections = {}
     for coll_name in target.list_collection_names():
-        info = target.command('collStats', coll_name)
-        size_of_collections[info['ns']] = info['storageSize']
+        info = target.command("collStats", coll_name)
+        size_of_collections[info["ns"]] = info["storageSize"]
     return size_of_collections
 
 
@@ -44,12 +47,12 @@ def print_mongo_storage_sizes(target: Union[MongoClient, Database]):
 
 
 def indented_json_dumps(obj, **kwargs):
-    kwargs.setdefault('dumps', bson.json_util.dumps)
+    kwargs.setdefault("dumps", bson.json_util.dumps)
     return volkanic.utils.indented_json_dumps(obj, **kwargs)
 
 
 def indented_json_print(obj, **kwargs):
-    kwargs.setdefault('dumps', indented_json_dumps)
+    kwargs.setdefault("dumps", indented_json_dumps)
     return volkanic.utils.indented_json_print(obj, **kwargs)
 
 
@@ -60,38 +63,38 @@ def infer_coll_triple_from_filename(path: str):
     ['local', 'retail', 'customers']
     """
     filename = os.path.split(path)[1]
-    coll_fullname = filename.rsplit('.', 2)[0]
-    return coll_fullname.split('.', 2)
+    coll_fullname = filename.rsplit(".", 2)[0]
+    return coll_fullname.split(".", 2)
 
 
 def infer_params(mongo: MongoClient):
-    params = dict(zip(['host', 'port'], mongo.address))
+    params = dict(zip(["host", "port"], mongo.address))
     params.update(mongo._MongoClient__options._options)  # noqa
     return params
 
 
 class MongoCommandLogger(CommandListener):
     _registered = False
-    _logger = logging.getLogger('_mongodb')
+    _logger = logging.getLogger("_mongodb")
     _level = logging.DEBUG
 
     @staticmethod
     def _fmt_opid(event):
         if event.request_id == event.operation_id:
             return event.request_id
-        return '{}.{}'.format(event.request_id, event.operation_id)
+        return "{}.{}".format(event.request_id, event.operation_id)
 
     @staticmethod
     def _fmt_url(event):
-        addr = ':'.join(str(s) for s in event.connection_id)
-        return '{}/{}'.format(addr, event.database_name)
+        addr = ":".join(str(s) for s in event.connection_id)
+        return "{}/{}".format(addr, event.database_name)
 
     def started(self, event: CommandStartedEvent):
         if not self._logger.isEnabledFor(self._level):
             return
         parts = [
             self._fmt_opid(event),
-            'started',
+            "started",
             self._fmt_url(event),
             event.command,
         ]
@@ -103,7 +106,7 @@ class MongoCommandLogger(CommandListener):
             return
         parts = [
             self._fmt_opid(event),
-            'succeeded',
+            "succeeded",
             int(event.duration_micros / 1000),
         ]
         msg = " ".join(str(s) for s in parts)
@@ -114,7 +117,7 @@ class MongoCommandLogger(CommandListener):
             return
         parts = [
             self._fmt_opid(event),
-            'failed',
+            "failed",
             event.duration_micros,
         ]
         msg = " ".join(str(s) for s in parts)

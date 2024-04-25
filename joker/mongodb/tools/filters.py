@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
+from __future__ import annotations
 
 import datetime
 
@@ -7,7 +8,7 @@ from bson import ObjectId
 
 
 def in_(vals):
-    return {'$in': vals}
+    return {"$in": vals}
 
 
 def exclude(keys):
@@ -15,17 +16,17 @@ def exclude(keys):
 
 
 def exists(*keys):
-    return {k: {'$exists': True} for k in keys}
+    return {k: {"$exists": True} for k in keys}
 
 
 def oid_filter_by_datetime(
-        start: datetime.datetime = None,
-        end: datetime.datetime = None) -> dict:
+    start: datetime.datetime = None, end: datetime.datetime = None
+) -> dict:
     filtr = {}
     if start is not None:
-        filtr['$gt'] = ObjectId.from_datetime(start)
+        filtr["$gt"] = ObjectId.from_datetime(start)
     if end:
-        filtr['$lt'] = ObjectId.from_datetime(end)
+        filtr["$lt"] = ObjectId.from_datetime(end)
     return filtr
 
 

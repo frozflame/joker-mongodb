@@ -9,8 +9,8 @@ from setuptools import find_namespace_packages
 # CAUTION:
 # Do NOT import your package from your setup.py
 
-_nsp = 'joker'
-_pkg = 'mongodb'
+_nsp = "joker"
+_pkg = "mongodb"
 _names = [_nsp, _pkg]
 _names = [s for s in _names if s]
 
@@ -21,21 +21,20 @@ def read(filename):
 
 
 def _find_version():
-    names = _names + ['__init__.py']
+    names = _names + ["__init__.py"]
     path = os.path.join(*names)
     root = os.path.dirname(__file__)
     path = os.path.join(root, path)
-    regex = re.compile(
-        r'''^__version__\s*=\s*('|"|'{3}|"{3})([.\w]+)\1\s*(#|$)''')
+    regex = re.compile(r"""^__version__\s*=\s*('|"|'{3}|"{3})([.\w]+)\1\s*(#|$)""")
     with open(path) as fin:
         for line in fin:
             line = line.strip()
-            if not line or line.startswith('#'):
+            if not line or line.startswith("#"):
                 continue
             mat = regex.match(line)
             if mat:
                 return mat.groups()[1]
-    raise ValueError('__version__ definition not found')
+    raise ValueError("__version__ definition not found")
 
 
 config = {
@@ -70,6 +69,6 @@ config = {
 }
 
 if _nsp:
-    config['namespace_packages'] = [_nsp]
+    config["namespace_packages"] = [_nsp]
 
 setuptools.setup(**config)

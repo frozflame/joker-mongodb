@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
+from __future__ import annotations
 
 from collections import defaultdict
 from typing import Union
@@ -34,7 +35,7 @@ class CollectionInterface:
 
     def find_recent_by_count(self, count=50) -> Cursor:
         cursor = self._coll.find(self.filtr, projection=self.projection)
-        return cursor.sort([('_id', -1)]).limit(count)
+        return cursor.sort([("_id", -1)]).limit(count)
 
     def find_most_recent_one(self) -> dict:
         recs = list(self.find_recent_by_count(1))
@@ -50,13 +51,13 @@ class CollectionInterface:
         vals = [r.get(uk) for r in records]
         uniq_vals = set(vals)
         if len(vals) != len(uniq_vals):
-            raise ValueError('records contain duplicating keys')
+            raise ValueError("records contain duplicating keys")
 
     def make_fusion_record(self):
         fusion_record = {}
         contiguous_stale_count = -1
         for skip in range(1000):
-            record = self._coll.find_one(sort=[('$natural', -1)], skip=skip)
+            record = self._coll.find_one(sort=[("$natural", -1)], skip=skip)
             if not record:
                 continue
             contiguous_stale_count += 1
@@ -69,7 +70,7 @@ class CollectionInterface:
         return fusion_record
 
     def query_uniq_values(self, fields: list, limit=1000):
-        latest = [('_id', -1)]
+        latest = [("_id", -1)]
         records = self._coll.find(sort=latest, projection=fields, limit=limit)
         uniq = defaultdict(set)
         for key in fields:
@@ -83,10 +84,9 @@ class MongoInterface:
     """A interface for multiple mongodb clusters."""
 
     def __init__(
-            self, hosts: dict,
-            default: str = 'localhost.default',
-            aliases: dict = None):
-        self.default_host, self.default_db_name = default.split('.')
+        self, hosts: dict, default: str = "localhost.default", aliases: dict = None
+    ):
+        self.default_host, self.default_db_name = default.split(".")
         self.hosts = hosts
         self.aliases = aliases or {}
         self._clients = {}
@@ -94,8 +94,8 @@ class MongoInterface:
     @classmethod
     def from_config(cls, options: dict):
         params = {
-            'default': options.pop('_default', None),
-            'aliases': options.pop('_aliases', None),
+            "default": options.pop("_default", None),
+            "aliases": options.pop("_aliases", None),
         }
         return cls(options, **params)
 
@@ -109,7 +109,7 @@ class MongoInterface:
         # host pass through as MongoClient argument
         params = self.hosts.get(host, host)
         if isinstance(params, str):
-            params = {'host': params}
+            params = {"host": params}
         return self._clients.setdefault(host, MongoClient(**params))
 
     @property
@@ -124,7 +124,7 @@ class MongoInterface:
             return names
         else:
             c = self.__class__.__name__
-            msg = 'requires 1 or 3 arguments, got {}'.format(c, n)
+            msg = "requires 1 or 3 arguments, got {}".format(c, n)
             raise ValueError(msg)
 
     def __call__(self, *names) -> Collection:
@@ -136,15 +136,13 @@ class MongoInterface:
         db_name = self.aliases.get(db_name, db_name)
         return mongo.get_database(db_name)
 
-    def get_coll(self, host: str, db_name: str, coll_name: str) \
-            -> Collection:
+    def get_coll(self, host: str, db_name: str, coll_name: str) -> Collection:
         db = self.get_db(host, db_name)
         return db.get_collection(coll_name)
 
-    def get_gridfs(self, host: str, db_name: str, coll_name: str = 'fs') \
-            -> GridFS:
-        assert not coll_name.endswith('.files')
-        assert not coll_name.endswith('.chunks')
+    def get_gridfs(self, host: str, db_name: str, coll_name: str = "fs") -> GridFS:
+        assert not coll_name.endswith(".files")
+        assert not coll_name.endswith(".chunks")
         db = self.get_db(host, db_name)
         return GridFS(db, collection=coll_name)
 
@@ -169,21 +167,20 @@ class MongoInterfaceExtended(MongoInterface):
 
     # TODO: support BSON
     def restore_a_file(self, lines, inner_path: str, empty_coll_only=True):
-        host, db_name, coll_name = \
-            utils.infer_coll_triple_from_filename(inner_path)
-        if coll_name == 'system.indexes':
+        host, db_name, coll_name = utils.infer_coll_triple_from_filename(inner_path)
+        if coll_name == "system.indexes":
             return
         coll = self.get_coll(host, db_name, coll_name)
         if empty_coll_only and coll.find_one(projection=[]):
-            printerr(inner_path, 'skipped')
+            printerr(inner_path, "skipped")
             return
         for ix, line in enumerate(lines):
             doc = json_util.loads(line)
-            id_ = doc.get('_id', '')
-            printerr(inner_path, ix, id_, '...', end=' ')
+            id_ = doc.get("_id", "")
+            printerr(inner_path, ix, id_, "...", end=" ")
             try:
                 coll.insert_one(doc)
             except pymongo.errors.DuplicateKeyError:
-                printerr('DuplicateKeyError')
+                printerr("DuplicateKeyError")
             else:
-                printerr('completed')
+                printerr("completed")

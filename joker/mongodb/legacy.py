@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
-
-"""
-This module is DEPRECATED.
-"""
+"""This module is DEPRECATED."""
 
 from gridfs import GridFS
 from pymongo import MongoClient
@@ -52,10 +49,9 @@ class MongoClientExtended(MongoClient):
         coll = self.get_coll(db_name, coll_name)
         return CollectionInterface(coll)
 
-    def get_gridfs(self, db_name: str, coll_name: str = 'fs') \
-            -> GridFS:
+    def get_gridfs(self, db_name: str, coll_name: str = "fs") -> GridFS:
         # avoid names like "images.files.files"
-        if coll_name.endswith('.files') or coll_name.endswith('.chunks'):
-            coll_name = coll_name.rsplit('.', 1)[0]
+        if coll_name.endswith(".files") or coll_name.endswith(".chunks"):
+            coll_name = coll_name.rsplit(".", 1)[0]
         db = self.get_database(db_name)
         return GridFS(db, collection=coll_name)

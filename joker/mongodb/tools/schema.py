@@ -12,13 +12,13 @@ from pymongo.collection import Collection
 
 class MongoFieldSchemator:
     _bsontype_of_pytypes = {
-        str: 'string',
-        dict: 'object',
-        type(None): 'null',
-        datetime.datetime: 'date',
-        int: 'long',
-        bool: 'bool',
-        ObjectId: 'objectId',
+        str: "string",
+        dict: "object",
+        type(None): "null",
+        datetime.datetime: "date",
+        int: "long",
+        bool: "bool",
+        ObjectId: "objectId",
     }
 
     _max_enum_length = 7
@@ -79,11 +79,11 @@ class MongoFieldSchemator:
                "enum": ["low", "mid", "high"],
             }
         """
-        p = {'bsonType': self.bsontype, 'enum': self.enum}
+        p = {"bsonType": self.bsontype, "enum": self.enum}
         return {k: v for k, v in p.items() if v is not None}
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class MongoDocumentSchemator:
@@ -132,10 +132,10 @@ class MongoDocumentSchemator:
         return {
             # $jsonSchema keyword '$schema' is not currently supported
             # "$schema": "http://json-schema.org/draft-04/schema#",
-            'type': 'object',
-            'properties': self.get_properties(),
-            'required': self.get_required(),
+            "type": "object",
+            "properties": self.get_properties(),
+            "required": self.get_required(),
         }
 
 
-__all__ = ['MongoFieldSchemator', 'MongoDocumentSchemator']
+__all__ = ["MongoFieldSchemator", "MongoDocumentSchemator"]

@@ -21,44 +21,44 @@ _logger = logging.getLogger(__name__)
 class OplogRecord(UserDict):
     @property
     def op(self) -> str:
-        return self.data.get('op')
+        return self.data.get("op")
 
     @property
     def ns(self) -> str:
-        return self.data.get('ns')
+        return self.data.get("ns")
 
     @property
     def ts(self) -> Timestamp:
-        return self.data.get('ts')
+        return self.data.get("ts")
 
     def to_mongo_doc(self):
         doc = self.data.copy()
-        doc['ns'] = self.ns
-        if 'o' in doc:
-            doc['o'] = json_util.dumps(doc['o'])
+        doc["ns"] = self.ns
+        if "o" in doc:
+            doc["o"] = json_util.dumps(doc["o"])
         return doc
 
     @classmethod
     def from_mongo_doc(cls, doc: dict):
         doc = dict(doc)
-        if 'o' in doc:
-            doc['o'] = json_util.loads(doc['o'])
+        if "o" in doc:
+            doc["o"] = json_util.loads(doc["o"])
         return cls(doc)
 
     @property
     def upstream_id(self) -> str:
         try:
-            return str(self.data['o']['_id'])
+            return str(self.data["o"]["_id"])
         except (KeyError, TypeError):
             pass
         try:
-            return str(self.data['o2']['_id'])
+            return str(self.data["o2"]["_id"])
         except (KeyError, TypeError):
             pass
 
     @property
     def id_(self) -> ObjectId:
-        if id_ := self.data.get('_id'):
+        if id_ := self.data.get("_id"):
             return ObjectId(id_)
 
 
@@ -66,12 +66,16 @@ class OplogRecord(UserDict):
 # TODO: consider thread safety
 class OplogTailer(object):
     _ns_exclude = {}
-    _db_exclude = {'config', 'local', 'admin'}
+    _db_exclude = {"config", "local", "admin"}
     record_cls = OplogRecord
 
     def __init__(
-            self, upstream_client: MongoClient, ts: Timestamp,
-            ns_pattern: str = None, ns_exclude: str = None):
+        self,
+        upstream_client: MongoClient,
+        ts: Timestamp,
+        ns_pattern: str = None,
+        ns_exclude: str = None,
+    ):
         """
         Args:
             upstream_client:
@@ -79,8 +83,8 @@ class OplogTailer(object):
             ns_pattern: regex
             ns_exclude: regex
         """
-        db = upstream_client.get_database('local')
-        self.oplog_coll = db.get_collection('oplog.rs')
+        db = upstream_client.get_database("local")
+        self.oplog_coll = db.get_collection("oplog.rs")
         self.ts = ts
         self.ns_pattern = ns_pattern
         self.ns_exclude = ns_exclude
@@ -89,20 +93,21 @@ class OplogTailer(object):
     def _get_where_clause(self):
         tests = ['this.op != "n"']
         if self.ns_pattern is not None:
-            tests.append('this.ns.match(/{}/)'.format(self.ns_pattern))
+            tests.append("this.ns.match(/{}/)".format(self.ns_pattern))
             # tests.append(f'this.ns.match(/{self.ns_pattern}/)')
         if self.ns_exclude is not None:
-            tests.append('!this.ns.match(/{}/)'.format(self.ns_exclude))
+            tests.append("!this.ns.match(/{}/)".format(self.ns_exclude))
             # tests.append(f'!this.ns.match(/{self.ns_exclude}/)')
-        return '&&'.join(tests)
+        return "&&".join(tests)
 
     def _get_cursor(self):
-        filtr = {'ts': {'$gt': self.ts}}
+        filtr = {"ts": {"$gt": self.ts}}
         # https://pymongo.readthedocs.io/en/stable/examples/tailable.html
         # TODO: consider using $expr for mongo >= 3.6
-        _logger.info('OplogTailer._get_cursor, filtr=%s', filtr)
+        _logger.info("OplogTailer._get_cursor, filtr=%s", filtr)
         cursor = self.oplog_coll.find(
-            filtr, oplog_replay=True,
+            filtr,
+            oplog_replay=True,
             cursor_type=pymongo.CursorType.TAILABLE_AWAIT,
         )
         where_clause = self._get_where_clause()
@@ -115,12 +120,12 @@ class OplogTailer(object):
         self._cursor = self._get_cursor()
 
     def _check_ns(self, doc: dict):
-        ns = doc.get('ns')
+        ns = doc.get("ns")
         if not ns:
             return False
         if ns in self._ns_exclude:
             return False
-        db_name = ns.split('.')[0]
+        db_name = ns.split(".")[0]
         if db_name in self._db_exclude:
             return False
         return True
@@ -134,7 +139,7 @@ class OplogTailer(object):
     def __iter__(self):
         return self
 
-    def __next__(self) -> 'record_cls':
+    def __next__(self) -> "record_cls":
         while True:
             doc = self._fetch_next()
             if doc is None:
@@ -142,7 +147,7 @@ class OplogTailer(object):
                 continue
             if not self._check_ns(doc):
                 continue
-            self.ts = doc.get('ts')
+            self.ts = doc.get("ts")
             return self.record_cls(doc)
 
 
@@ -154,13 +159,14 @@ class ChangeStreamRegistry:
     @staticmethod
     def apply(handler: Callable, coll_name: str, event: dict):
         try:
-            id_ = event['documentKey']['_id']
+            id_ = event["documentKey"]["_id"]
         except KeyError:
             id_ = None
         _logger.info(
-            'applying %s() to change event of collection %r, %s',
-            getattr(handler, '__name__', None) or str(handler),
-            coll_name, id_
+            "applying %s() to change event of collection %r, %s",
+            getattr(handler, "__name__", None) or str(handler),
+            coll_name,
+            id_,
         )
         # noinspection PyBroadException
         try:
