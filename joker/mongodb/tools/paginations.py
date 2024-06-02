@@ -55,9 +55,10 @@ class PaginatedResult:
         total = counts[0]["total"] if counts else 0
         return PaginatedResult(items=result["documents"], total=total)
 
+    def to_dict(self) -> dict:
+        return dataclasses.asdict(self)
+
 
 def compact_paginated_result(cursor: Iterable[RawResultDict]) -> PaginatedResult:
-    result: RawResultDict = list(cursor)[0]
-    counts = result["counts"]
-    total = counts[0]["total"] if counts else 0
-    return PaginatedResult(items=result["documents"], total=total)
+    # will be deprecated
+    return PaginatedResult.from_raw(cursor)
