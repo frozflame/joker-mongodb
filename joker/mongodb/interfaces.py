@@ -19,6 +19,7 @@ from joker.mongodb.tools import kvstore
 
 
 class CollectionInterface:
+    # deprecated!
     def __init__(self, coll: Collection, filtr=None, projection=None):
         self._coll = coll
         self.filtr = filtr or {}
