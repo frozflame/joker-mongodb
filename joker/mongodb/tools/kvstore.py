@@ -9,30 +9,7 @@ from pymongo.collection import Collection
 _Document = Union[str, int, float, bool, list, dict, None]
 
 
-def kv_load(coll: Collection, key: str) -> _Document:
-    record: Union[dict, None] = coll.find_one(
-        {"_id": key},
-        projection={"_id": False},
-    )
-    if record is None:
-        return
-    try:
-        return record["_"]
-    except KeyError:
-        return record
-
-
-def kv_save(coll: Collection, key: str, val: _Document):
-    filtr = {"_id": key}
-    # explode dict if '_' and '_id' are not in it -- be less nested
-    if isinstance(val, dict) and "_" not in val and "_id" not in val:
-        replacement = val
-    else:
-        replacement = {"_": val}
-    return coll.replace_one(filtr, replacement, upsert=True)
-
-
-def kv_load_(c: Collection, key: str) -> _Document:
+def kv_load(c: Collection, key: str) -> _Document:
     record: Union[dict, None] = c.find_one(
         {"_id": key},
         projection={"_id": False, "value": True},
@@ -42,7 +19,7 @@ def kv_load_(c: Collection, key: str) -> _Document:
     return record.get("value")
 
 
-def kv_save_(c: Collection, key: str, value: _Document):
+def kv_save(c: Collection, key: str, value: _Document):
     return c.update_one(
         {"_id": key},
         {"$set": {"value": value}},
@@ -55,7 +32,7 @@ class KVStore:
         self._collection = collection
 
     def load(self, key: str) -> _Document:
-        return kv_load_(self._collection, key)
+        return kv_load(self._collection, key)
 
     def save(self, key: str, value: _Document):
-        return kv_save_(self._collection, key, value)
+        return kv_save(self._collection, key, value)
