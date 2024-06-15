@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
 # coding: utf-8
 """This module is DEPRECATED."""
+from __future__ import annotations
 
+from collections import defaultdict
+from typing import Union
+
+import pymongo.errors
+from bson import ObjectId, json_util
 from gridfs import GridFS
 from pymongo import MongoClient
 from pymongo.collection import Collection
+from pymongo.cursor import Cursor
 from pymongo.database import Database
+from volkanic.utils import printerr
 
-from joker.mongodb import utils
-from joker.mongodb.interfaces import CollectionInterface
+from joker.mongodb import utils, MongoInterface
+from joker.mongodb.tools import kvstore
 
 
 class DatabaseInterface:
@@ -55,3 +63,105 @@ class MongoClientExtended(MongoClient):
             coll_name = coll_name.rsplit(".", 1)[0]
         db = self.get_database(db_name)
         return GridFS(db, collection=coll_name)
+
+
+class CollectionInterface:
+    """Deprecated!"""
+    def __init__(self, coll: Collection, filtr=None, projection=None):
+        self._coll = coll
+        self.filtr = filtr or {}
+        self.projection = projection
+
+    def exist(self, filtr: Union[ObjectId, dict]):
+        return self._coll.find_one(filtr, projection=[])
+
+    def kv_load(self, key: str):
+        return kvstore.kv_load(self._coll, key)
+
+    def kv_save(self, key: str, val):
+        return kvstore.kv_save(self._coll, key, val)
+
+    def find_recent_by_count(self, count=50) -> Cursor:
+        cursor = self._coll.find(self.filtr, projection=self.projection)
+        return cursor.sort([("_id", -1)]).limit(count)
+
+    def find_most_recent_one(self) -> dict:
+        recs = list(self.find_recent_by_count(1))
+        if recs:
+            return recs[0]
+
+    def _insert(self, records):
+        if records:
+            self._coll.insert_many(records, ordered=False)
+
+    @staticmethod
+    def _check_for_uniqueness(records, uk):
+        vals = [r.get(uk) for r in records]
+        uniq_vals = set(vals)
+        if len(vals) != len(uniq_vals):
+            raise ValueError("records contain duplicating keys")
+
+    def make_fusion_record(self):
+        fusion_record = {}
+        contiguous_stale_count = -1
+        for skip in range(1000):
+            record = self._coll.find_one(sort=[("$natural", -1)], skip=skip)
+            if not record:
+                continue
+            contiguous_stale_count += 1
+            for key, val in record.items():
+                if not record.get(key):
+                    fusion_record[key] = val
+                    contiguous_stale_count = -1
+            if contiguous_stale_count > 10:
+                return fusion_record
+        return fusion_record
+
+    def query_uniq_values(self, fields: list, limit=1000):
+        latest = [("_id", -1)]
+        records = self._coll.find(sort=latest, projection=fields, limit=limit)
+        uniq = defaultdict(set)
+        for key in fields:
+            for rec in records:
+                val = rec.get(key)
+                uniq[key].add(val)
+        return uniq
+
+
+class MongoInterfaceExtended(MongoInterface):
+    def _get_target(self, host: str, db_name: str = None):
+        if db_name is None:
+            return self.get_mongo(host)
+        return self.get_db(host, db_name)
+
+    def inspect_storage_sizes(self, host: str, db_name: str = None):
+        target = self._get_target(host, db_name)
+        return utils.inspect_mongo_storage_sizes(target)
+
+    def print_storage_sizes(self, host: str, db_name: str = None):
+        target = self._get_target(host, db_name)
+        return utils.print_mongo_storage_sizes(target)
+
+    def get_ci(self, *names, **kwargs) -> CollectionInterface:
+        coll = self.__call__(*names)
+        return CollectionInterface(coll, **kwargs)
+
+    # TODO: support BSON
+    def restore_a_file(self, lines, inner_path: str, empty_coll_only=True):
+        host, db_name, coll_name = utils.infer_coll_triple_from_filename(inner_path)
+        if coll_name == "system.indexes":
+            return
+        coll = self.get_coll(host, db_name, coll_name)
+        if empty_coll_only and coll.find_one(projection=[]):
+            printerr(inner_path, "skipped")
+            return
+        for ix, line in enumerate(lines):
+            doc = json_util.loads(line)
+            id_ = doc.get("_id", "")
+            printerr(inner_path, ix, id_, "...", end=" ")
+            try:
+                coll.insert_one(doc)
+            except pymongo.errors.DuplicateKeyError:
+                printerr("DuplicateKeyError")
+            else:
+                printerr("completed")
