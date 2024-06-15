@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os.path
+from os import PathLike
 from typing import Union
 
 import bson.json_util
@@ -17,6 +18,8 @@ from joker.mongodb.logger import MongoCommandLogger
 _compat = [
     MongoCommandLogger,
 ]
+
+Pathlike = Union[str, PathLike]
 
 
 def is_in_replset(mongo: MongoClient) -> bool:
