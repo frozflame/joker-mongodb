@@ -2,4 +2,5 @@ joker-cast>=0.5.0
 joker-textmanip>=0.3.1
 joker>=0.3.3
 pymongo>=3.11.0
+requests>=2.0.0
 volkanic>=0.5.1
