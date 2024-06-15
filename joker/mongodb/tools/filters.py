@@ -34,3 +34,19 @@ def oid_filter_recent(days=30, seconds=0):
     delta = datetime.timedelta(days=days, seconds=seconds)
     start = datetime.datetime.now() - delta
     return oid_filter_by_datetime(start, None)
+
+
+def py_true():
+    return {"$nin": [0, "", 0.0, [], {}, False, None]}
+
+
+def py_false():
+    return {"$in": [0, "", 0.0, [], {}, False, None]}
+
+
+def js_true():
+    return {"$nin": [0, "", 0.0, False, None]}
+
+
+def js_false():
+    return {"$in": [0, "", 0.0, False, None]}
