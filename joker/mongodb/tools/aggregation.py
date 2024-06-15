@@ -42,6 +42,7 @@ def replace_root(*docs: _Document):
     }
 
 
+# https://www.mongodb.com/docs/manual/reference/operator/aggregation/lookup/
 @dataclasses.dataclass
 class LookupRecipe:
     from_: str
@@ -79,3 +80,13 @@ class LookupRecipe:
             {"$addFields": new_fields},
             {"$unset": [self._key]},
         ]
+
+
+def lookup_unwind_unset(
+    from_: str,
+    local_field: str,
+    foreign_field: str,
+    fieldmap: dict[str, str] = None,
+):
+    recipe = LookupRecipe(from_, local_field, foreign_field)
+    return recipe.build_pipeline(fieldmap)
