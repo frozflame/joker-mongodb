@@ -32,19 +32,22 @@ def kv_save(coll: Collection, key: str, val: _Document):
     return coll.replace_one(filtr, replacement, upsert=True)
 
 
-def _kv_load2(coll: Collection, key: str) -> _Document:
-    record: Union[dict, None] = coll.find_one(
-        {"_id": key},
-        projection={"_id": False, "value": True},
-    )
-    if record is None:
-        return
-    return record.get("value")
+class KVStore:
+    def __init__(self, collection: Collection):
+        self._collection = collection
 
+    def load(self, key: str) -> _Document:
+        record: Union[dict, None] = self._collection.find_one(
+            {"_id": key},
+            projection={"_id": False, "value": True},
+        )
+        if record is None:
+            return
+        return record.get("value")
 
-def _kv_save2(coll: Collection, key: str, value: _Document):
-    return coll.update_one(
-        {"_id": key},
-        {"$set": {"value": value}},
-        upsert=True,
-    )
+    def save(self, key: str, value: _Document):
+        return self._collection.update_one(
+            {"_id": key},
+            {"$set": {"value": value}},
+            upsert=True,
+        )

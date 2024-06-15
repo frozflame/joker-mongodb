@@ -10,7 +10,7 @@ from typing import Union
 
 
 def _get_random_key() -> str:
-    chars = ["_", *random.choices(string.ascii_lowercase, k=20)]
+    chars = ["_tmpkey_", *random.choices(string.ascii_lowercase, k=20)]
     return "".join(chars)
 
 
@@ -43,7 +43,7 @@ def replace_root(*docs: _Document):
 
 
 @dataclasses.dataclass
-class Lookup:
+class LookupRecipe:
     from_: str
     local_field: str
     foreign_field: str
