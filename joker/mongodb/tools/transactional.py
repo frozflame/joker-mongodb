@@ -10,6 +10,9 @@ from pymongo.collection import Collection
 
 
 class TransactionHelper:
+    # this class is deprecated
+    # this class will be removed at ver 0.5.0
+
     def __init__(self, coll: Collection):
         self.coll = coll
 

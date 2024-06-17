@@ -3,9 +3,8 @@
 
 import importlib
 
-from volkanic.introspect import find_all_plain_modules
-
 import joker.meta
+from volkanic.introspect import find_all_plain_modules
 
 dotpath_prefixes = [
     "joker.mongodb.",
@@ -32,5 +31,18 @@ def test_module_imports():
             importlib.import_module(dotpath)
 
 
+def test_api_consistency():
+    import importlib
+
+    aggregation = importlib.import_module("joker.mongodb.tools.aggregation")
+    print(
+        aggregation.LookupRecipe,
+        aggregation.lookup_unwind_unset,
+        aggregation.replace_root,
+        aggregation.not_in,
+    )
+
+
 if __name__ == "__main__":
     test_module_imports()
+    test_api_consistency()

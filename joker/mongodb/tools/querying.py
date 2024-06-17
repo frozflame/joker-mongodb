@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 # this module is deprecated
+# this module will be removed at ver 0.5.0
 
 from joker.mongodb.query import (
     find_with_renaming,

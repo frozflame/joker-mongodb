@@ -10,6 +10,8 @@ from bson import ObjectId
 def oid_filter_by_datetime(
     start: datetime.datetime = None, end: datetime.datetime = None
 ) -> dict:
+    # this function is deprecated
+    # this function will be removed at ver 0.5.0
     filtr = {}
     if start is not None:
         filtr["$gt"] = ObjectId.from_datetime(start)
@@ -19,6 +21,8 @@ def oid_filter_by_datetime(
 
 
 def oid_filter_recent(days=30, seconds=0):
+    # this function is deprecated
+    # this function will be removed at ver 0.5.0
     delta = datetime.timedelta(days=days, seconds=seconds)
     start = datetime.datetime.now() - delta
     return oid_filter_by_datetime(start, None)
