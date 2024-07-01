@@ -54,5 +54,6 @@ docs/_build/
 target/
 
 .sass-cache
+tests/xp/
 _local
 

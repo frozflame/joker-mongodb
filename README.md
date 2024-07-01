@@ -3,6 +3,26 @@ joker-mongodb
 
 Access mongodb with handy utilities and fun.
 
+Install
+-------
+
+From PyPi using `pip`:
+
+    python -m pip install joker-mongodb
+
+Link to current virtual environment for development (run at project root directory):
+
+    pip install -e .
+
+Python version requirement (plan)
+
+    0.2.0   Python 3.6+
+    0.3.0   Python 3.7+
+    0.4.0   Python 3.8+
+    0.5.0   Python 3.9+
+    0.6.0   Python 3.10+
+
+
 ## Connnect to multiple mongo servers with MongoInterface
 
 Example:
@@ -61,14 +81,12 @@ if __name__ == '__main__':
     print(get_product('60f231605e0a4ea3c6c31c13'))
 ```
 
+
+
+
+
 Recent changes
 --------------
 
-version 0.1.4
-
-* add `MongoDocumentSchemator` and `MongoFieldSchemator`
-
-version 0.1.3
-
-* add `TransactionHelper`
+See `docs/changelog.txt`
 

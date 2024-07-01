@@ -1,0 +1,10 @@
+ver 0.4.1
+* add QueryParams.get_facet_stage(), .get_sort_stage()
+* fix lookup_unwind_unset() with fieldmap = None
+* improve LookupRecipe: 4 conceptual stages, array_idx
+
+ver 0.1.4
+* add `MongoDocumentSchemator` and `MongoFieldSchemator`
+
+ver 0.1.3
+* add `TransactionHelper`

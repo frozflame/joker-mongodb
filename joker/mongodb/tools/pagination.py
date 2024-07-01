@@ -21,20 +21,28 @@ class QueryParams:
     limit: int = 10
     sort: str = "_id"
     order: int = -1
-    keyword: str | None = None
+    keyword: str = None
+
+    def get_facet_stage(self):
+        return {
+            "$facet": {
+                "documents": [
+                    {"$skip": self.skip},
+                    {"$limit": self.limit},
+                ],
+                # total count of documents
+                "counts": [{"$count": "total"}],
+            }
+        }
+
+    def get_sort_stage(self):
+        return {"$sort": {self.sort: self.order}}
+
 
     def get_pagination_pipeline(self):
         return [
-            {"$sort": {self.sort: self.order}},
-            {
-                "$facet": {
-                    "documents": [
-                        {"$skip": self.skip},
-                        {"$limit": self.limit},
-                    ],
-                    "counts": [{"$count": "total"}],  # get the total count of documents
-                }
-            },
+            self.get_sort_stage(),
+            self.get_facet_stage(),
         ]
 
 
