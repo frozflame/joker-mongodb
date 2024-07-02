@@ -34,10 +34,9 @@ def test_module_imports():
 def test_api_consistency():
     import importlib
 
-    aggregation = importlib.import_module("joker.mongodb.tools.aggregation")
+    aggregation = importlib.import_module("joker.mongodb.aggregation")
     print(
         aggregation.LookupRecipe,
-        aggregation.lookup_unwind_unset,
         aggregation.replace_root,
         aggregation.not_in,
     )

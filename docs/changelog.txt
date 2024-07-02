@@ -1,3 +1,12 @@
+ver 0.5.0
+* refactor lookup recipes: add ObjectLookupRecipe, ValueLookupRecipe
+* move j.m.tools.aggregation to j.m.aggregation
+* move j.m.tools.pagination to j.m.pagination
+* remove move j.m.tools.querying
+* remove move j.m.tools.transactional
+* remove move j.m.tools.filters
+
+
 ver 0.4.1
 * add QueryParams.get_facet_stage(), .get_sort_stage()
 * fix lookup_unwind_unset() with fieldmap = None
