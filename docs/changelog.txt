@@ -1,3 +1,8 @@
+ver 0.5.1
+* add xop functions: xop_slice_to_end(), xop_str_join(), xop_str_concat()
+* add op functions: trim(), ltrim(), rtrim(), convert()
+* WIP: _rank_each_group()
+
 ver 0.5.0
 * refactor lookup recipes: add ObjectLookupRecipe, ValueLookupRecipe
 * move j.m.tools.aggregation to j.m.aggregation

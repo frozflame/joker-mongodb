@@ -16,11 +16,11 @@ Link to current virtual environment for development (run at project root directo
 
 Python version requirement (plan)
 
-    0.2.0   Python 3.6+
-    0.3.0   Python 3.7+
-    0.4.0   Python 3.8+
-    0.5.0   Python 3.9+
-    0.6.0   Python 3.10+
+    0.5.0   Python 3.7+
+    0.6.0   Python 3.7+
+    0.7.0   Python 3.7+
+    0.8.0   Python 3.8+
+    0.9.0   Python 3.9+
 
 
 ## Connnect to multiple mongo servers with MongoInterface

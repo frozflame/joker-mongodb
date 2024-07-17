@@ -37,6 +37,12 @@ def _find_version():
     raise ValueError("__version__ definition not found")
 
 
+def _ensure_valid_native_namespace_package():
+    path = os.path.join(os.path.split(__file__)[0], "joker/__init__.py")
+    if os.path.exists(path):
+        raise ImportError("not a valid native package")
+
+
 config = {
     "name": "joker-mongodb",
     "version": _find_version(),
@@ -70,4 +76,5 @@ config = {
 if _nsp:
     config["namespace_packages"] = [_nsp]
 
+_ensure_valid_native_namespace_package()
 setuptools.setup(**config)
