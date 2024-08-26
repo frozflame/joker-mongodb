@@ -1,3 +1,10 @@
+Changes of joker-mongodb
+------------------------
+
+ver 0.5.2
+* convert module j.m.query to a sub-package
+* add QueryParams._iter_match_stages(), QueryParams.where
+
 ver 0.5.1
 * add xop functions: xop_slice_to_end(), xop_str_join(), xop_str_concat()
 * add op functions: trim(), ltrim(), rtrim(), convert()

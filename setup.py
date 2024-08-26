@@ -22,9 +22,8 @@ def read(filename):
 
 def _find_version():
     names = _names + ["__init__.py"]
-    path = os.path.join(*names)
     root = os.path.dirname(__file__)
-    path = os.path.join(root, path)
+    path = os.path.join(root, *names)
     regex = re.compile(r"""^__version__\s*=\s*('|"|'{3}|"{3})([.\w]+)\1\s*(#|$)""")
     with open(path) as fin:
         for line in fin:
@@ -66,6 +65,7 @@ config = {
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
     ],
     # ensure copy static file to runtime directory
     "include_package_data": True,

@@ -22,6 +22,13 @@ class QueryParams:
     sort: str = "_id"
     order: int = -1
     keyword: str = None
+    where: dict = None
+
+    def _iter_match_stages(self):
+        if self.keyword:
+            yield {"$match": {"$text": {"$search": self.keyword}}}
+        if self.where:
+            yield {"$match": self.where}
 
     def get_facet_stage(self):
         return {
@@ -38,9 +45,9 @@ class QueryParams:
     def get_sort_stage(self):
         return {"$sort": {self.sort: self.order}}
 
-
     def get_pagination_pipeline(self):
         return [
+            *self._iter_match_stages(),
             self.get_sort_stage(),
             self.get_facet_stage(),
         ]
